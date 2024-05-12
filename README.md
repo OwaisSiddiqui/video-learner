@@ -32,4 +32,3 @@ Other:
 #### Deploy
 - Vercel (CDN)
 - Supabase (hosted Postgres database)
-- Pusher (hosted WebSockets)
