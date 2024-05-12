@@ -1,0 +1,7 @@
+How to run app on ip address to run app on mobile:
+
+Use this command on terminal (Windows 11): (ipconfig | Select-String -Pattern 'IPv4.*:' | Select-Object -Index 1).Line -replace '.*?: '
+
+Copy the ip address
+
+Then run npx next dev -H [ip address] -p 3000

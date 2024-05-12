@@ -1,0 +1,331 @@
+"use client";
+
+import type { Message } from "@/lib/types";
+import {
+  createParser,
+  type ParsedEvent,
+  type ReconnectInterval,
+} from "eventsource-parser";
+import { type Session } from "next-auth";
+import { useRouter } from "next/navigation";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEventHandler,
+} from "react";
+import { useFormStatus } from "react-dom";
+import Markdown from "react-markdown";
+import { IconArrowDown, IconLogoIcon, IconSend } from "./ui/icons";
+import { Textarea } from "./ui/textarea";
+
+const LoadingDots = () => {
+  return (
+    <div className="flex items-center justify-center gap-1">
+      <div
+        className="h-2 w-2 animate-pulse rounded-full bg-gray-300"
+        style={{ animationDelay: "250ms" }}
+      ></div>
+      <div
+        className="h-2 w-2 animate-pulse rounded-full bg-gray-300"
+        style={{ animationDelay: "500ms" }}
+      ></div>
+      <div
+        className="h-2 w-2 animate-pulse rounded-full bg-gray-300"
+        style={{ animationDelay: "1s" }}
+      ></div>
+    </div>
+  );
+};
+
+export const Chat = ({
+  id,
+  initialMessages,
+  suggestions,
+}: {
+  id: number;
+  initialMessages: Message[];
+  session: Session | null;
+  suggestions: { title: string; question: string }[];
+}) => {
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showScrollToBottomButton, setShowScrollToBottomButton] =
+    useState(false);
+  const [responseTextState, setResponseTextState] = useState("");
+  const responseText = useRef("");
+  const isStreaming = useMemo(() => {
+    return !!responseTextState;
+  }, [responseTextState]);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const formRef = useRef<HTMLFormElement>(null);
+  const { pending } = useFormStatus();
+  const [text, setText] = useState("");
+  const [scrollTopValue, setScrollTopValue] = useState(0);
+  const showPrompts = useMemo(() => {
+    return messages.length === 0;
+  }, [messages]);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const router = useRouter();
+
+  const onChangeTextarea: ChangeEventHandler<HTMLTextAreaElement> = (e) => {
+    const textArea = e.currentTarget;
+    if (textArea) {
+      textArea.style.height = "1lh";
+      textArea.style.height = `${textArea.scrollHeight}px`;
+      setText(textArea.value);
+    }
+  };
+
+  const scrollToBottom = () => {
+    const scrollElm = scrollRef.current;
+    if (!scrollElm) return;
+    scrollElm.scrollTop = scrollElm.scrollHeight - scrollElm.clientHeight + 1;
+  };
+
+  const scrollToBottomStreaming = () => {
+    const scrollElm = scrollRef.current;
+    if (!scrollElm) return;
+    const scrollTopVeryBottom =
+      scrollElm.scrollHeight - scrollElm.clientHeight + 1;
+    const atBottom = scrollElm.scrollTop >= scrollTopVeryBottom - 50;
+    if (atBottom) {
+      scrollElm.scrollTop = scrollElm.scrollHeight;
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottomStreaming();
+  }, [responseTextState]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, []);
+
+  useEffect(() => {
+    if (isLoading) {
+      scrollToBottom();
+    }
+  }, [isLoading]);
+
+  useEffect(() => {
+    const scrollElm = scrollRef.current;
+    if (!scrollElm) return;
+    if (
+      scrollElm.scrollTop + 1 <
+      scrollElm.scrollHeight - scrollElm.clientHeight
+    ) {
+      setShowScrollToBottomButton(true);
+    } else {
+      setShowScrollToBottomButton(false);
+    }
+  }, [scrollTopValue]);
+
+  return (
+    <div className="flex h-full w-full flex-1 flex-col overflow-hidden">
+      <div
+        ref={scrollRef}
+        className="flex flex-1 flex-col items-center overflow-y-auto overflow-x-hidden"
+        onScroll={(e) => {
+          const elm = e.target as HTMLDivElement;
+          setScrollTopValue(elm.scrollTop);
+        }}
+      >
+        <div className="mx-auto flex w-full flex-col gap-8 px-4 pb-20 pt-10 md:max-w-3xl lg:mx-0 lg:max-w-[40rem]">
+          {messages.map((message, index) => {
+            return (
+              <div className="flex flex-col gap-1 text-[15px]" key={index}>
+                <div className="flex items-center gap-2">
+                  {message.role === "user" ? (
+                    <div className="flex size-4 rounded-full bg-[#DAD0EE]"></div>
+                  ) : (
+                    <IconLogoIcon />
+                  )}
+                  <div className="font-semibold">
+                    {message.role === "user" ? "You" : "Video Learner"}
+                  </div>
+                </div>
+                <div className="pl-[1.5rem] leading-relaxed">
+                  <Markdown className={"flex flex-col gap-5"}>
+                    {message.text}
+                  </Markdown>
+                </div>
+              </div>
+            );
+          })}
+          {isLoading && (
+            <div className="flex w-full flex-col gap-6 self-start pl-[1.5rem]">
+              <div>
+                <div className="flex self-start">
+                  <LoadingDots />
+                </div>
+              </div>
+            </div>
+          )}
+          {isStreaming && (
+            <div className="flex flex-col gap-1 text-[15px]">
+              <div className="flex items-center gap-2">
+                <IconLogoIcon />
+                <div className="font-semibold">Video Learner</div>
+              </div>
+              <div className="pl-[1.5rem] leading-relaxed">
+                <Markdown>{responseTextState}</Markdown>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="box-border flex w-full px-4 lg:w-3/5 lg:min-w-[500px] lg:self-center">
+        <form
+          ref={formRef}
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const form = e.currentTarget;
+            const formData = new FormData(form);
+            const prompt = formData.get("text");
+            if (!(typeof prompt === "string")) {
+              throw new Error();
+            }
+            form.reset();
+            setText("");
+            setMessages((prev) => [...prev, { role: "user", text: prompt }]);
+            setIsLoading(true);
+            responseText.current = "";
+            const response = await fetch("/api/openai", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                prompt: prompt,
+                chatId: id,
+              }),
+            });
+            setIsLoading(false);
+
+            if (!response.ok) {
+              throw new Error(response.statusText);
+            }
+
+            // This data is a ReadableStream
+            const data = response.body;
+            if (!data) {
+              return;
+            }
+
+            const onParseGPT = (event: ParsedEvent | ReconnectInterval) => {
+              if (event.type === "event") {
+                const data = event.data;
+                try {
+                  const text =
+                    (JSON.parse(data) as unknown as { text: string }).text ??
+                    "";
+                  responseText.current += text;
+                  setResponseTextState(responseText.current);
+                  // const withoutLast = messages.slice(0, -1)
+                } catch (e) {
+                  console.error(e);
+                }
+              }
+            };
+
+            const onParse = onParseGPT;
+
+            // https://web.dev/streams/#the-getreader-and-read-methods
+            const reader = data.getReader();
+            const decoder = new TextDecoder();
+            const parser = createParser(onParse);
+            let done = false;
+            while (!done) {
+              const { value, done: doneReading } = await reader.read();
+              done = doneReading;
+              const chunkValue = decoder.decode(value);
+              parser.feed(chunkValue);
+            }
+            setMessages((prev) => [
+              ...prev,
+              { role: "assistant", text: responseText.current ?? "" },
+            ]);
+            setResponseTextState("");
+            router.refresh();
+          }}
+          className="relative flex flex-1 cursor-text items-center self-center rounded-[12px] border border-[#D6D6D6]  bg-white px-4 py-4 shadow-sm"
+        >
+          <button
+            type="button"
+            className={`border-1 absolute right-[2rem] top-0 -translate-y-[calc(100%+2rem)] rounded-md border border-[#D6D6D6] bg-white p-1 ${showScrollToBottomButton ? "flex" : "hidden"}`}
+            onClick={() => {
+              scrollToBottom();
+            }}
+          >
+            <IconArrowDown />
+          </button>
+          <Textarea
+            onChange={onChangeTextarea}
+            name="text"
+            placeholder={
+              messages.length === 0
+                ? "What do you want to learn about? Or try the suggestions..."
+                : "Message Video Learner..."
+            }
+            className="h-[1lh] max-h-60 min-h-0 resize-none rounded-none border-none p-0 shadow-none placeholder:text-[#BBBBBB] focus-visible:ring-0"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey && "form" in e.target) {
+                e.preventDefault();
+                (e.target.form as HTMLFormElement).requestSubmit();
+              }
+            }}
+            ref={textareaRef}
+          />
+          <button
+            disabled={!text}
+            aria-disabled={pending}
+            type="submit"
+            className="size-6"
+          >
+            <IconSend className="size-6" inverted={!!text} />
+          </button>
+          {/* <div className="absolute top-0 -translate-y-[calc(100%+0.1rem)] text-[9px] text-[#938da1]">
+          Use Shift + Enter to create multiple lines
+        </div> */}
+          {showPrompts && (
+            <div className="absolute left-0 top-0 flex w-full -translate-y-[calc(100%+2rem)] flex-col">
+              <div className="pb-1 pl-4 text-[10px]">Suggestions</div>
+              <div className="grid grid-cols-2 gap-2">
+                {suggestions.map((suggestion, index) => {
+                  return (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => {
+                        textareaRef.current!.value = `${suggestion.title} ${suggestion.question}`;
+                        console.log(textareaRef.current?.value);
+                        formRef.current?.requestSubmit();
+                      }}
+                      className="border-1 flex flex-1 cursor-pointer flex-col overflow-hidden rounded-xl border border-[#d9d9d9] p-4 hover:bg-white"
+                    >
+                      <div className="text-[14px] font-semibold">
+                        {suggestion.title}
+                      </div>
+                      <div className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-left text-[12px]">
+                        {suggestion.question}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </form>
+      </div>
+      <div className="flex w-full justify-center self-center text-ellipsis px-4 py-2 text-center text-[10px] text-[#B5B5B5]">
+        Video Learner uses the ChatGPT API and will sometimes make mistakes.
+        Consider checking important information.
+      </div>
+    </div>
+  );
+};
