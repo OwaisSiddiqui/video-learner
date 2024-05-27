@@ -13,14 +13,16 @@ import { S3Client } from "@aws-sdk/client-s3";
 import { env } from "@/env";
 import { Upload } from "@aws-sdk/lib-storage";
 
-export interface StatementTemplate {
+export const maxDuration = 60;
+
+interface StatementTemplate {
   type: "statement";
   statement: string;
   narration: string;
   mp3: number;
 }
 
-export interface TitleBulletsTemplate {
+interface TitleBulletsTemplate {
   type: "title-bullets";
   title: {
     value: string;
@@ -34,7 +36,7 @@ export interface TitleBulletsTemplate {
   }[];
 }
 
-export interface MiddleImageTemplate {
+interface MiddleImageTemplate {
   type: "middle-image";
   imageDescription: string;
   imageUrl?: string;
@@ -42,7 +44,7 @@ export interface MiddleImageTemplate {
   mp3: number;
 }
 
-export interface SideBySideImagesTemplate {
+interface SideBySideImagesTemplate {
   type: "side-by-side-images";
   firstImageDescription: {
     value: string;
@@ -58,7 +60,7 @@ export interface SideBySideImagesTemplate {
   };
 }
 
-export type Slide =
+type Slide =
   | StatementTemplate
   | TitleBulletsTemplate
   | MiddleImageTemplate
