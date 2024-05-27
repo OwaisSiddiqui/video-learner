@@ -6,6 +6,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { UserMenu } from "@/components/user-menu";
 import { getChats } from "./actions";
 
+export const maxDuration = 60;
+
 export default async function ChatLayout({
   children,
 }: {

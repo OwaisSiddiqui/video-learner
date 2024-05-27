@@ -13,8 +13,6 @@ import { S3Client } from "@aws-sdk/client-s3";
 import { env } from "@/env";
 import { Upload } from "@aws-sdk/lib-storage";
 
-export const maxDuration = 60;
-
 interface StatementTemplate {
   type: "statement";
   statement: string;
