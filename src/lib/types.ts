@@ -76,6 +76,13 @@ export interface SideBySideImagesTemplate {
   };
 }
 
+export interface User extends Record<string, unknown> {
+  id: string;
+  email: string;
+  password: string;
+  salt: string;
+}
+
 export type Slide =
   | StatementTemplate
   | TitleBulletsTemplate
