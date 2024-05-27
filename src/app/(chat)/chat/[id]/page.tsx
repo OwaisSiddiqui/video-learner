@@ -3,6 +3,8 @@ import { auth } from "@/auth";
 import { Chat } from "@/components/chat";
 import { getSuggestions } from "../../actions";
 
+export const maxDuration = 60;
+
 export default async function HomePage({
   params,
 }: {
