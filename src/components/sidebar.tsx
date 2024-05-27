@@ -9,6 +9,37 @@ import { useMemo } from "react";
 import { Button } from "./ui/button";
 import { IconEdit } from "./ui/icons";
 
+const CategoryChats = ({
+  categorizedChats,
+  pathname,
+  category,
+}: {
+  categorizedChats: CategoriesType;
+  pathname: string;
+  category: string;
+}) => {
+  return (
+    <>
+      <div className="pl-2 text-[12px] text-[#A8A8A8]">{category}</div>
+      {categorizedChats.today.map((chat) => {
+        return (
+          <Button
+            key={chat.id}
+            asChild
+            className={`flex w-full items-center justify-start whitespace-nowrap ${pathname === `/chat/${chat.id}` ? "bg-[#9F83D8] bg-opacity-25" : "bg-transparent"} px-2 py-1.5 text-left font-normal text-black shadow-none hover:bg-[#9F83D8] hover:bg-opacity-25`}
+          >
+            <Link href={`/chat/${chat.id}`}>
+              <div className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px]">
+                {chat.title}
+              </div>
+            </Link>
+          </Button>
+        );
+      })}
+    </>
+  );
+};
+
 type ChatType = InferSelectModel<typeof chatsSchema>;
 type CategoriesType = {
   today: ChatType[];
@@ -80,70 +111,30 @@ export function Sidebar({
               New Chat
             </a>
           </Button>
-          <div className="flex h-full flex-1 flex-col gap-1 overflow-y-scroll">
+          <div
+            className="flex h-full flex-1 flex-col gap-1 overflow-y-auto"
+            style={{ scrollbarGutter: "stable" }}
+          >
             {categorizedChats.today.length > 0 && (
-              <>
-                <div className="pl-2 text-[12px] text-[#A8A8A8]">Today</div>
-                {categorizedChats.today.map((chat) => {
-                  return (
-                    <Button
-                      key={chat.id}
-                      asChild
-                      className={`w-full items-start justify-start whitespace-nowrap ${pathname === `/chat/${chat.id}` ? "bg-[#9F83D8] bg-opacity-25" : "bg-transparent"} px-2 py-1.5 text-left font-normal text-black shadow-none hover:bg-[#9F83D8] hover:bg-opacity-25`}
-                    >
-                      <Link href={`/chat/${chat.id}`}>
-                        <div className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px]">
-                          {chat.title}
-                        </div>
-                      </Link>
-                    </Button>
-                  );
-                })}
-              </>
+              <CategoryChats
+                categorizedChats={categorizedChats}
+                category="Today"
+                pathname={pathname}
+              />
             )}
             {categorizedChats.yesterday.length > 0 && (
-              <>
-                <div className="pl-2 pt-7 text-[12px] text-[#A8A8A8]">
-                  Yesterday
-                </div>
-                {categorizedChats.yesterday.map((chat) => {
-                  return (
-                    <Button
-                      key={chat.id}
-                      asChild
-                      className={`w-full items-start justify-start whitespace-nowrap ${pathname === `/chat/${chat.id}` ? "bg-[#9F83D8] bg-opacity-25" : "bg-transparent"} px-2 py-1.5 text-left font-normal text-black shadow-none hover:bg-[#9F83D8] hover:bg-opacity-25`}
-                    >
-                      <Link href={`/chat/${chat.id}`}>
-                        <div className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px]">
-                          {chat.title}
-                        </div>
-                      </Link>
-                    </Button>
-                  );
-                })}
-              </>
+              <CategoryChats
+                categorizedChats={categorizedChats}
+                category="Yesterday"
+                pathname={pathname}
+              />
             )}
             {categorizedChats.other.length > 0 && (
-              <>
-                <div className="pl-2 pt-7 text-[12px] text-[#A8A8A8]">
-                  Previous 7 Days
-                </div>
-                {categorizedChats.other.map((chat) => {
-                  return (
-                    <Button
-                      key={chat.id}
-                      asChild
-                      className={`w-full items-start justify-start whitespace-nowrap ${pathname === `/chat/${chat.id}` ? "bg-[#9F83D8] bg-opacity-25" : "bg-transparent"} px-2 py-1.5 text-left font-normal text-black shadow-none hover:bg-[#9F83D8] hover:bg-opacity-25`}
-                    >
-                      <Link href={`/chat/${chat.id}`}>
-                        <div className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px]">
-                          {chat.title}
-                        </div>
-                      </Link>
-                    </Button>
-                  );
-                })}
-              </>
+              <CategoryChats
+                categorizedChats={categorizedChats}
+                category="Over 7 Days ago"
+                pathname={pathname}
+              />
             )}
           </div>
         </div>

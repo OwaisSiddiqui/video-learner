@@ -15,7 +15,7 @@ export async function getMessages({ chatId }: { chatId: number }) {
       where: and(eq(chats.id, chatId), eq(chats.userId, sessionUserId)),
     });
     if (!chat) {
-      return []
+      return [];
     }
     const data = await db
       .select()
@@ -39,6 +39,6 @@ export async function getMessages({ chatId }: { chatId: number }) {
       }
     });
   } else {
-    return []
+    return [];
   }
 }

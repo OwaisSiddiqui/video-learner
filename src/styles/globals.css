@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -66,11 +65,11 @@
 }
 
 ::-webkit-scrollbar:horizontal {
-  height: .5rem;
+  height: 0.5rem;
   width: 1rem;
 }
 ::-webkit-scrollbar:vertical {
-  height: .5rem;
+  height: 0.5rem;
   width: 1rem;
 }
 
@@ -88,30 +87,30 @@
 
 ::-webkit-scrollbar-thumb:hover {
   --tw-bg-opacity: 1;
-  background-color: rgba(227,227,227,var(--tw-bg-opacity));
+  background-color: rgba(227, 227, 227, var(--tw-bg-opacity));
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background-color: hsla(0,0%,100%,.1);
+  background-color: hsla(0, 0%, 100%, 0.1);
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background-color: hsla(0,0%,100%,.3);
+  background-color: hsla(0, 0%, 100%, 0.3);
 }
 
 @media (min-width: 768px) {
   .scrollbar-trigger ::-webkit-scrollbar-thumb {
-      visibility:hidden;
+    visibility: hidden;
   }
 
   .scrollbar-trigger:hover ::-webkit-scrollbar-thumb {
-      visibility: visible;
+    visibility: visible;
   }
 }
 
 /* For Code Blocks Generated */
 code {
-  display: inline-block; 
+  display: inline-block;
   width: 100%;
   overflow: hidden;
   overflow-x: auto;

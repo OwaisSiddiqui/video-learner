@@ -5,23 +5,6 @@ export type Message = {
   id?: number;
 };
 
-export interface Chat extends Record<string, unknown> {
-  id: string;
-  title: string;
-  createdAt: Date;
-  userId: string;
-  path: string;
-  messages: Message[];
-  sharePath?: string;
-}
-
-export type ServerActionResult<Result> = Promise<
-  | Result
-  | {
-      error: string;
-    }
->;
-
 export interface Session {
   user: {
     id: string;
@@ -29,17 +12,6 @@ export interface Session {
   };
 }
 
-export interface AuthResult {
-  type: string;
-  message: string;
-}
-
-export interface User extends Record<string, unknown> {
-  id: string;
-  email: string;
-  password: string;
-  salt: string;
-}
 export type ChatGPTAgent = "user" | "system";
 
 export interface ChatGPTMessage {
@@ -58,3 +30,54 @@ export interface OpenAIStreamPayload {
   stream: boolean;
   n: number;
 }
+
+export interface StatementTemplate {
+  type: "statement";
+  statement: string;
+  narration: string;
+  mp3: number;
+}
+
+export interface TitleBulletsTemplate {
+  type: "title-bullets";
+  title: {
+    value: string;
+    narration: string;
+    mp3: number;
+  };
+  bullets: {
+    value: string;
+    narration: string;
+    mp3: number;
+  }[];
+}
+
+export interface MiddleImageTemplate {
+  type: "middle-image";
+  imageDescription: string;
+  narration: string;
+  mp3: number;
+  imageUrl?: string;
+}
+
+export interface SideBySideImagesTemplate {
+  type: "side-by-side-images";
+  firstImageDescription: {
+    value: string;
+    narration: string;
+    mp3: number;
+    imageUrl?: string;
+  };
+  secondImageDescription: {
+    value: string;
+    narration: string;
+    mp3: number;
+    imageUrl?: string;
+  };
+}
+
+export type Slide =
+  | StatementTemplate
+  | TitleBulletsTemplate
+  | MiddleImageTemplate
+  | SideBySideImagesTemplate;

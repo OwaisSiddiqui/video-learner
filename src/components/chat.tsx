@@ -1,11 +1,14 @@
 "use client";
 
-import type { Message } from "@/lib/types";
-import {
-  createParser,
-  type ParsedEvent,
-  type ReconnectInterval,
-} from "eventsource-parser";
+import type {
+  Message,
+  MiddleImageTemplate,
+  SideBySideImagesTemplate,
+  Slide,
+  StatementTemplate,
+  TitleBulletsTemplate,
+} from "@/lib/types";
+import type { Slide as SlideType } from "@/lib/types";
 import { type Session } from "next-auth";
 import { useRouter } from "next/navigation";
 import {
@@ -16,26 +19,279 @@ import {
   type ChangeEventHandler,
 } from "react";
 import { useFormStatus } from "react-dom";
-import Markdown from "react-markdown";
 import { IconArrowDown, IconLogoIcon, IconSend } from "./ui/icons";
 import { Textarea } from "./ui/textarea";
+import { getSlides } from "@/app/(chat)/actions";
+import Image from "next/image";
 
 const LoadingDots = () => {
   return (
-    <div className="flex items-center justify-center gap-1">
-      <div
-        className="h-2 w-2 animate-pulse rounded-full bg-gray-300"
-        style={{ animationDelay: "250ms" }}
-      ></div>
-      <div
-        className="h-2 w-2 animate-pulse rounded-full bg-gray-300"
-        style={{ animationDelay: "500ms" }}
-      ></div>
-      <div
-        className="h-2 w-2 animate-pulse rounded-full bg-gray-300"
-        style={{ animationDelay: "1s" }}
-      ></div>
+    <Slide>
+      <div className="flex h-full w-full items-center justify-center">
+        <div className="flex items-center justify-center gap-1">
+          <div
+            className="h-2 w-2 animate-pulse rounded-full bg-gray-300"
+            style={{ animationDelay: "250ms" }}
+          ></div>
+          <div
+            className="h-2 w-2 animate-pulse rounded-full bg-gray-300"
+            style={{ animationDelay: "500ms" }}
+          ></div>
+          <div
+            className="h-2 w-2 animate-pulse rounded-full bg-gray-300"
+            style={{ animationDelay: "1s" }}
+          ></div>
+        </div>
+      </div>
+    </Slide>
+  );
+};
+
+const getNarrations = (slide: Slide) => {
+  switch (slide.type) {
+    case "statement":
+      return [slide.narration];
+    case "title-bullets":
+      return [
+        slide.title.narration,
+        ...slide.bullets.map((bullet) => bullet.narration),
+      ];
+    case "side-by-side-images":
+      return [
+        slide.firstImageDescription.narration,
+        slide.secondImageDescription.narration,
+      ];
+    case "middle-image":
+      return [slide.narration];
+    default:
+      return [];
+  }
+};
+
+const Presentation = ({
+  slideDeck,
+  isLast,
+}: {
+  slideDeck: {
+    id: string;
+    slides: SlideType[];
+    audioS3Files: { index: number; path: string }[];
+  };
+  isLast: boolean;
+}) => {
+  const [slideIndex, setSlideIndex] = useState(0);
+  const [narrationIndex, satNarrationIndex] = useState(0);
+  const [audioNumber, setAudioNumber] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (isLast) {
+      void audioRef.current?.play();
+    }
+  }, [isLast]);
+
+  const handleAudioEnded = () => {
+    if (!slideDeck) {
+      return;
+    }
+    const slide = slideDeck.slides[slideIndex];
+    if (!slide) {
+      throw new Error("");
+    }
+    const narrations = getNarrations(slide);
+    if (narrationIndex === narrations.length - 1) {
+      setSlideIndex((prev) => {
+        if (prev + 1 > slideDeck.slides.length - 1) {
+          return prev;
+        }
+        return prev + 1;
+      });
+      satNarrationIndex(0);
+    } else {
+      satNarrationIndex((prev) => prev + 1);
+    }
+    setAudioNumber((prev) => {
+      if (prev + 1 > slideDeck.audioS3Files.length - 1) {
+        return prev;
+      }
+      return prev + 1;
+    });
+  };
+
+  const renderSlide = () => {
+    if (!slideDeck) {
+      return;
+    }
+    const slide = slideDeck.slides[slideIndex];
+    if (!slide) {
+      throw new Error("");
+    }
+    switch (slide.type) {
+      case "statement":
+        return <StatementSlide audioNumber={audioNumber} slide={slide} />;
+      case "title-bullets":
+        return <TitleBulletsSlide audioNumber={audioNumber} slide={slide} />;
+      case "side-by-side-images":
+        return (
+          <SideBySideImagesSlide audioNumber={audioNumber} slide={slide} />
+        );
+      case "middle-image":
+        return <MiddleImageSlide audioNumber={audioNumber} slide={slide} />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-start gap-3">
+      {slideDeck && renderSlide()}
+      {slideDeck && (
+        <audio
+          controls
+          autoPlay={isLast}
+          key={audioNumber}
+          ref={audioRef}
+          onEnded={handleAudioEnded}
+        >
+          <source
+            src={
+              slideDeck.audioS3Files.find((file) => file.index === audioNumber)
+                ?.path
+            }
+            type="audio/mpeg"
+          />
+        </audio>
+      )}
     </div>
+  );
+};
+
+const Slide = ({ children }: React.PropsWithChildren) => {
+  return (
+    <div className="border-1 flex h-[300px] w-[500px] flex-col items-start gap-5 rounded-md border border-none bg-white px-10 py-8 text-left shadow-md">
+      {children}
+    </div>
+  );
+};
+
+const StatementSlide = ({
+  slide,
+  audioNumber,
+}: {
+  slide: StatementTemplate;
+  audioNumber: number;
+}) => (
+  <Slide>
+    <div
+      className={`flex h-full w-full items-center justify-center text-center text-[26px] font-bold ${
+        audioNumber + 1 >= slide.mp3 ? "flex" : "hidden"
+      }`}
+    >
+      {slide.statement}
+    </div>
+  </Slide>
+);
+
+const TitleBulletsSlide = ({
+  slide,
+  audioNumber,
+}: {
+  slide: TitleBulletsTemplate;
+  audioNumber: number;
+}) => {
+  return (
+    <Slide>
+      <h2
+        className={`text-[20px] font-bold ${
+          audioNumber + 1 >= slide.title.mp3 ? "flex" : "hidden"
+        }`}
+      >
+        {slide.title.value}
+      </h2>
+      <ul className="list-inside list-disc ">
+        {slide.bullets.map((bullet, index) => (
+          <li
+            className={`list-item ${
+              audioNumber + 1 >= bullet.mp3 ? "block" : "hidden"
+            }`}
+            key={index}
+          >
+            {bullet.value}
+          </li>
+        ))}
+      </ul>
+    </Slide>
+  );
+};
+
+const SideBySideImagesSlide = ({
+  slide,
+  audioNumber,
+}: {
+  slide: SideBySideImagesTemplate;
+  audioNumber: number;
+}) => {
+  return (
+    <Slide>
+      <div className="flex h-full w-full justify-between">
+        <div
+          className={`${
+            audioNumber + 1 >= slide.firstImageDescription.mp3
+              ? "flex"
+              : "hidden"
+          }`}
+        >
+          <Image
+            alt=""
+            width="200"
+            height="200"
+            className="object-contain"
+            src={slide.firstImageDescription.imageUrl ?? ""}
+          />
+        </div>
+        <div
+          className={`${
+            audioNumber + 1 >= slide.secondImageDescription.mp3
+              ? "flex"
+              : "hidden"
+          }`}
+        >
+          <Image
+            alt=""
+            width="200"
+            height="200"
+            className="object-contain"
+            src={slide.secondImageDescription.imageUrl ?? ""}
+          />
+        </div>
+      </div>
+    </Slide>
+  );
+};
+
+const MiddleImageSlide = ({
+  slide,
+  audioNumber,
+}: {
+  slide: MiddleImageTemplate;
+  audioNumber: number;
+}) => {
+  return (
+    <Slide>
+      <div
+        className={`flex ${
+          audioNumber + 1 >= slide.mp3 ? "flex" : "hidden"
+        } h-full w-full items-center justify-center`}
+      >
+        <Image
+          alt=""
+          width="200"
+          height="200"
+          className="object-contain"
+          src={slide.imageUrl ?? ""}
+        />
+      </div>
+    </Slide>
   );
 };
 
@@ -47,17 +303,15 @@ export const Chat = ({
   id: number;
   initialMessages: Message[];
   session: Session | null;
-  suggestions: { title: string; question: string }[];
+  suggestions: {
+    title: string;
+    question: string;
+  }[];
 }) => {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
   const [showScrollToBottomButton, setShowScrollToBottomButton] =
     useState(false);
-  const [responseTextState, setResponseTextState] = useState("");
-  const responseText = useRef("");
-  const isStreaming = useMemo(() => {
-    return !!responseTextState;
-  }, [responseTextState]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -86,21 +340,6 @@ export const Chat = ({
     if (!scrollElm) return;
     scrollElm.scrollTop = scrollElm.scrollHeight - scrollElm.clientHeight + 1;
   };
-
-  const scrollToBottomStreaming = () => {
-    const scrollElm = scrollRef.current;
-    if (!scrollElm) return;
-    const scrollTopVeryBottom =
-      scrollElm.scrollHeight - scrollElm.clientHeight + 1;
-    const atBottom = scrollElm.scrollTop >= scrollTopVeryBottom - 50;
-    if (atBottom) {
-      scrollElm.scrollTop = scrollElm.scrollHeight;
-    }
-  };
-
-  useEffect(() => {
-    scrollToBottomStreaming();
-  }, [responseTextState]);
 
   useEffect(() => {
     scrollToBottom();
@@ -150,9 +389,19 @@ export const Chat = ({
                   </div>
                 </div>
                 <div className="pl-[1.5rem] leading-relaxed">
-                  <Markdown className={"flex flex-col gap-5"}>
-                    {message.text}
-                  </Markdown>
+                  {message.role === "assistant" && (
+                    <Presentation
+                      isLast={index === messages.length - 1}
+                      slideDeck={
+                        JSON.parse(message.text) as {
+                          id: string;
+                          slides: Slide[];
+                          audioS3Files: { index: number; path: string }[];
+                        }
+                      }
+                    />
+                  )}
+                  {message.role === "user" && message.text}
                 </div>
               </div>
             );
@@ -163,17 +412,6 @@ export const Chat = ({
                 <div className="flex self-start">
                   <LoadingDots />
                 </div>
-              </div>
-            </div>
-          )}
-          {isStreaming && (
-            <div className="flex flex-col gap-1 text-[15px]">
-              <div className="flex items-center gap-2">
-                <IconLogoIcon />
-                <div className="font-semibold">Video Learner</div>
-              </div>
-              <div className="pl-[1.5rem] leading-relaxed">
-                <Markdown>{responseTextState}</Markdown>
               </div>
             </div>
           )}
@@ -194,63 +432,12 @@ export const Chat = ({
             setText("");
             setMessages((prev) => [...prev, { role: "user", text: prompt }]);
             setIsLoading(true);
-            responseText.current = "";
-            const response = await fetch("/api/openai", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                prompt: prompt,
-                chatId: id,
-              }),
-            });
+            const data = await getSlides(prompt, id);
             setIsLoading(false);
-
-            if (!response.ok) {
-              throw new Error(response.statusText);
-            }
-
-            // This data is a ReadableStream
-            const data = response.body;
-            if (!data) {
-              return;
-            }
-
-            const onParseGPT = (event: ParsedEvent | ReconnectInterval) => {
-              if (event.type === "event") {
-                const data = event.data;
-                try {
-                  const text =
-                    (JSON.parse(data) as unknown as { text: string }).text ??
-                    "";
-                  responseText.current += text;
-                  setResponseTextState(responseText.current);
-                  // const withoutLast = messages.slice(0, -1)
-                } catch (e) {
-                  console.error(e);
-                }
-              }
-            };
-
-            const onParse = onParseGPT;
-
-            // https://web.dev/streams/#the-getreader-and-read-methods
-            const reader = data.getReader();
-            const decoder = new TextDecoder();
-            const parser = createParser(onParse);
-            let done = false;
-            while (!done) {
-              const { value, done: doneReading } = await reader.read();
-              done = doneReading;
-              const chunkValue = decoder.decode(value);
-              parser.feed(chunkValue);
-            }
             setMessages((prev) => [
               ...prev,
-              { role: "assistant", text: responseText.current ?? "" },
+              { role: "assistant", text: JSON.stringify(data) },
             ]);
-            setResponseTextState("");
             router.refresh();
           }}
           className="relative flex flex-1 cursor-text items-center self-center rounded-[12px] border border-[#D6D6D6]  bg-white px-4 py-4 shadow-sm"
@@ -289,9 +476,6 @@ export const Chat = ({
           >
             <IconSend className="size-6" inverted={!!text} />
           </button>
-          {/* <div className="absolute top-0 -translate-y-[calc(100%+0.1rem)] text-[9px] text-[#938da1]">
-          Use Shift + Enter to create multiple lines
-        </div> */}
           {showPrompts && (
             <div className="absolute left-0 top-0 flex w-full -translate-y-[calc(100%+2rem)] flex-col">
               <div className="pb-1 pl-4 text-[10px]">Suggestions</div>

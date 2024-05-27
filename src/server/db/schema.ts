@@ -10,7 +10,7 @@ import {
   serial,
   text,
   timestamp,
-  varchar
+  varchar,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccount } from "next-auth/adapters";
 
@@ -76,7 +76,7 @@ export const chats = pgTable("chat", {
     .references(() => users.id, { onDelete: "cascade" }),
   title: varchar("title").notNull(),
   lastAccessed: timestamp("last_accessed").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull()
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const messages = pgTable("message", {
@@ -89,6 +89,6 @@ export const messages = pgTable("message", {
   role: roleEnum("roles").notNull(),
 });
 
-export const chatsRelation = relations(chats, ({ one, many }) => ({
+export const chatsRelation = relations(chats, ({ many }) => ({
   message: many(messages),
 }));
