@@ -1,5 +1,3 @@
-"use server";
-
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { chats, messages } from "@/server/db/schema";
