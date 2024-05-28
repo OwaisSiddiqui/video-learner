@@ -9,6 +9,13 @@ import { useMemo } from "react";
 import { Button } from "./ui/button";
 import { IconEdit } from "./ui/icons";
 
+type ChatType = InferSelectModel<typeof chatsSchema>;
+type CategoriesType = {
+  today: ChatType[];
+  yesterday: ChatType[];
+  other: ChatType[];
+};
+
 const CategoryChats = ({
   categorizedChats,
   pathname,
@@ -16,12 +23,15 @@ const CategoryChats = ({
 }: {
   categorizedChats: CategoriesType;
   pathname: string;
-  category: string;
+  category: {
+    value: keyof CategoriesType;
+    display: string;
+  };
 }) => {
   return (
     <>
-      <div className="pl-2 text-[12px] text-[#A8A8A8]">{category}</div>
-      {categorizedChats.today.map((chat) => {
+      <div className="pl-2 text-[12px] text-[#A8A8A8]">{category.display}</div>
+      {categorizedChats[category.value].map((chat) => {
         return (
           <Button
             key={chat.id}
@@ -38,13 +48,6 @@ const CategoryChats = ({
       })}
     </>
   );
-};
-
-type ChatType = InferSelectModel<typeof chatsSchema>;
-type CategoriesType = {
-  today: ChatType[];
-  yesterday: ChatType[];
-  other: ChatType[];
 };
 
 export function Sidebar({
@@ -118,21 +121,30 @@ export function Sidebar({
             {categorizedChats.today.length > 0 && (
               <CategoryChats
                 categorizedChats={categorizedChats}
-                category="Today"
+                category={{
+                  display: "Today",
+                  value: "today",
+                }}
                 pathname={pathname}
               />
             )}
             {categorizedChats.yesterday.length > 0 && (
               <CategoryChats
                 categorizedChats={categorizedChats}
-                category="Yesterday"
+                category={{
+                  display: "Yesterday",
+                  value: "yesterday",
+                }}
                 pathname={pathname}
               />
             )}
             {categorizedChats.other.length > 0 && (
               <CategoryChats
                 categorizedChats={categorizedChats}
-                category="Over 7 Days ago"
+                category={{
+                  display: "Previous 7 Days",
+                  value: "other",
+                }}
                 pathname={pathname}
               />
             )}
