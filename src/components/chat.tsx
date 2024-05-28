@@ -23,6 +23,7 @@ import { IconArrowDown, IconLogoIcon, IconSend } from "./ui/icons";
 import { Textarea } from "./ui/textarea";
 import { getSlides } from "@/app/(chat)/actions";
 import Image from "next/image";
+import { Button } from "./ui/button";
 
 const LoadingDots = () => {
   return (
@@ -80,7 +81,7 @@ const Presentation = ({
   isLast: boolean;
 }) => {
   const [slideIndex, setSlideIndex] = useState(0);
-  const [narrationIndex, satNarrationIndex] = useState(0);
+  const [narrationIndex, setNarrationIndex] = useState(0);
   const [audioNumber, setAudioNumber] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -106,9 +107,9 @@ const Presentation = ({
         }
         return prev + 1;
       });
-      satNarrationIndex(0);
+      setNarrationIndex(0);
     } else {
-      satNarrationIndex((prev) => prev + 1);
+      setNarrationIndex((prev) => prev + 1);
     }
     setAudioNumber((prev) => {
       if (prev + 1 > slideDeck.audioS3Files.length - 1) {
@@ -168,7 +169,7 @@ const Presentation = ({
 
 const Slide = ({ children }: React.PropsWithChildren) => {
   return (
-    <div className="border-1 flex h-[300px] w-[500px] flex-col items-start gap-5 rounded-md border border-none bg-white px-10 py-8 text-left shadow-md">
+    <div className="border-1 flex h-[300px] w-full flex-col items-start gap-5 rounded-md border border-none bg-white px-5 py-3 text-left shadow-md lg:px-10 lg:py-8">
       {children}
     </div>
   );
@@ -235,7 +236,7 @@ const SideBySideImagesSlide = ({
     <Slide>
       <div className="flex h-full w-full justify-between">
         <div
-          className={`${
+          className={`flex-1 ${
             audioNumber + 1 >= slide.firstImageDescription.mp3
               ? "flex"
               : "hidden"
@@ -245,12 +246,12 @@ const SideBySideImagesSlide = ({
             alt=""
             width="200"
             height="200"
-            className="object-contain"
+            className="h-full w-full object-contain"
             src={slide.firstImageDescription.imageUrl ?? ""}
           />
         </div>
         <div
-          className={`${
+          className={`flex-1 ${
             audioNumber + 1 >= slide.secondImageDescription.mp3
               ? "flex"
               : "hidden"
@@ -260,7 +261,7 @@ const SideBySideImagesSlide = ({
             alt=""
             width="200"
             height="200"
-            className="object-contain"
+            className="h-full w-full object-contain"
             src={slide.secondImageDescription.imageUrl ?? ""}
           />
         </div>
@@ -287,7 +288,7 @@ const MiddleImageSlide = ({
           alt=""
           width="200"
           height="200"
-          className="object-contain"
+          className="h-full w-full object-contain"
           src={slide.imageUrl ?? ""}
         />
       </div>

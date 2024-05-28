@@ -82,7 +82,10 @@ export function SidebarMobile({
               New Chat
             </a>
           </Button>
-          <div className="flex h-full flex-1 flex-col gap-1 overflow-y-scroll">
+          <div
+            className="flex h-full flex-1 flex-col gap-1 overflow-y-auto"
+            style={{ scrollbarGutter: "stable" }}
+          >
             {categorizedChats.today.length > 0 && (
               <>
                 <div className="pl-2 text-[12px] text-[#A8A8A8]">Today</div>
