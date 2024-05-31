@@ -431,7 +431,7 @@ export async function getSlides(question: string, chatId: number | null, isGuest
       })
       .catch((error) => console.log(error)),
   );
-  promises.push(getImageUrls(data).catch(error => console.log(error)));
+  // promises.push(getImageUrls(data).catch(error => console.log(error)));
   await Promise.all(promises).catch(error => console.log(error));
   // TODO: Save data
   const result = { id: newUUID, slides: data, audioS3Files: audioS3Files } as {
