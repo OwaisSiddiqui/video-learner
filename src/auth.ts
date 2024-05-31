@@ -11,7 +11,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Resend({
       apiKey: env.AUTH_RESEND_KEY,
-      from: "no-reply@aiacademy.one",
+      from: env.FROM_EMAIL,
     }),
   ],
 });

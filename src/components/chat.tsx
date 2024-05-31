@@ -392,7 +392,7 @@ export const Chat = ({
   }, [scrollTopValue]);
 
   return (
-    <div className="flex h-full w-full flex-1 flex-col overflow-hidden lg:pr-[150px]">
+    <div className="flex h-full w-full flex-1 flex-col overflow-hidden">
       <div
         ref={scrollRef}
         className="flex flex-1 flex-col items-center overflow-y-auto overflow-x-hidden"
@@ -401,7 +401,7 @@ export const Chat = ({
           setScrollTopValue(elm.scrollTop);
         }}
       >
-        <div className="mx-auto flex w-full flex-col gap-8 px-4 pb-20 pt-10 md:max-w-3xl lg:mx-0 lg:max-w-[40rem]">
+        <div className="mx-auto flex w-full flex-col gap-8 px-4 pb-20 pt-10 md:max-w-3xl lg:mx-0 lg:mr-[150px] lg:max-w-[40rem]">
           {messages.map((message, index) => {
             console.log(messages, message);
             return (
@@ -455,7 +455,7 @@ export const Chat = ({
           )}
         </div>
       </div>
-      <div className="box-border flex w-full px-4 lg:w-3/5 lg:min-w-[500px] lg:self-center">
+      <div className="box-border flex w-full px-4 lg:mr-[150px] lg:w-3/5 lg:min-w-[500px] lg:self-center">
         <form
           ref={formRef}
           onSubmit={async (e) => {
@@ -615,7 +615,7 @@ export const Chat = ({
           )}
         </form>
       </div>
-      <div className="flex w-full justify-center self-center text-ellipsis px-4 py-2 text-center text-[10px] text-[#B5B5B5]">
+      <div className="flex w-full justify-center self-center text-ellipsis px-4 py-2 text-center text-[10px] text-[#B5B5B5] lg:mr-[150px]">
         Video Learner uses the ChatGPT API and will sometimes make mistakes.
         Consider checking important information.
       </div>

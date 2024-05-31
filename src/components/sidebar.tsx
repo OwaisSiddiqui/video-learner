@@ -106,7 +106,7 @@ export function Sidebar({
   return (
     <>
       {session && (
-        <div className="flex h-full flex-col gap-5 overflow-hidden bg-white">
+        <div className="flex h-full flex-col gap-5 overflow-hidden bg-[#f9f9f9]">
           <Button
             className="border-1 flex gap-2 border border-[#E7E0F5] bg-transparent px-4 font-normal text-black shadow-none hover:bg-[#E7E0F5]"
             asChild

@@ -21,7 +21,7 @@ export default async function ChatLayout({
 
   return (
     <div className="flex w-full flex-col overflow-hidden lg:flex-row">
-      <div className="hidden h-full w-[300px] flex-col bg-white px-3 py-3 lg:flex">
+      <div className="hidden h-full w-[300px] flex-col bg-[#f9f9f9] px-3 py-3 lg:flex">
         <div className="flex p-4">
           <IconLogo />
         </div>
