@@ -444,7 +444,7 @@ export async function getSlides(question: string, chatId: number | null, isGuest
       chatId: chatId,
       text: JSON.stringify(result),
     });
-  return redirect(`/chat/${chatId}`)
+  redirect(`/chat/${chatId}`)
 }
 
 export async function getSuggestions() {
