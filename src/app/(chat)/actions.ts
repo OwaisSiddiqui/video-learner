@@ -251,7 +251,10 @@ export async function getImageUrls(data: Slide[]) {
         "e11e41633aaa6af2a344c1447dea63ab803754215e10238aa59e84c3b8a54cb5", // Get your API_KEY from https://serpapi.com/manage-api-key
       q: description,
       location: "Canada",
-    });
+    }).catch(error => console.log(error))
+    if (!result) {
+      throw new Error("")
+    }
     console.log("Result", result);
     let imageUrl: null | string = null;
     const resultValidated = resultSchema.parse(result);
@@ -428,7 +431,7 @@ export async function getSlides(question: string, chatId: number | null, isGuest
       })
       .catch((error) => console.log(error)),
   );
-  promises.push(getImageUrls(data));
+  promises.push(getImageUrls(data).catch(error => console.log(error)));
   await Promise.allSettled(promises);
   // TODO: Save data
   const result = { id: newUUID, slides: data, audioS3Files: audioS3Files } as {
