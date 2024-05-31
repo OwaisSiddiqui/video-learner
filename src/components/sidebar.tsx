@@ -29,8 +29,10 @@ const CategoryChats = ({
   };
 }) => {
   return (
-    <>
-      <div className="pl-2 text-[12px] text-[#A8A8A8]">{category.display}</div>
+    <div className="flex w-full flex-col">
+      <div className="pb-1 pl-2 text-[12px] text-[#A8A8A8]">
+        {category.display}
+      </div>
       {categorizedChats[category.value].map((chat) => {
         return (
           <Button
@@ -46,7 +48,7 @@ const CategoryChats = ({
           </Button>
         );
       })}
-    </>
+    </div>
   );
 };
 
@@ -104,7 +106,7 @@ export function Sidebar({
   return (
     <>
       {session && (
-        <div className="flex h-full flex-col gap-5 overflow-hidden">
+        <div className="flex h-full flex-col gap-5 overflow-hidden bg-white">
           <Button
             className="border-1 flex gap-2 border border-[#E7E0F5] bg-transparent px-4 font-normal text-black shadow-none hover:bg-[#E7E0F5]"
             asChild
@@ -115,7 +117,7 @@ export function Sidebar({
             </a>
           </Button>
           <div
-            className="flex h-full flex-1 flex-col gap-1 overflow-y-auto"
+            className="flex h-full w-full flex-1 flex-col gap-5 overflow-y-auto"
             style={{ scrollbarGutter: "stable" }}
           >
             {categorizedChats.today.length > 0 && (

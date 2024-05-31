@@ -26,14 +26,17 @@ export function UserMenu({ user }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="pl-0">
+        <Button
+          variant="ghost"
+          className="box-border flex h-auto justify-start"
+        >
           <div className="flex size-7 shrink-0 select-none items-center justify-center rounded-full bg-[#DAD0EE] text-xs font-medium uppercase text-muted-foreground">
             {getUserInitials(user.email)}
           </div>
           <span className="ml-2 block">{user.email}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent sideOffset={8} align="start" className="w-fit">
+      <DropdownMenuContent className="dropdown-menu-content">
         <DropdownMenuItem className="flex-col items-start focus:bg-transparent">
           <div className="text-xs text-zinc-500">{user.email}</div>
         </DropdownMenuItem>

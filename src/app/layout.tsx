@@ -21,7 +21,7 @@ export default function RootLayout({
   return (
     <html className="h-full" lang="en">
       <body
-        className={`flex h-full min-h-full w-screen flex-1 overflow-hidden ${inter.className} bg-gradient-to-bl from-[#F3EFFA] to-white`}
+        className={`flex h-full min-h-full w-screen flex-1 overflow-hidden ${inter.className} bg-white`}
       >
         {children}
       </body>

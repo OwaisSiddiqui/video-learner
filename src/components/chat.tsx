@@ -24,11 +24,32 @@ import { Textarea } from "./ui/textarea";
 import { getSlides } from "@/app/(chat)/actions";
 import Image from "next/image";
 import { Button } from "./ui/button";
+import { sleep } from "openai/core.mjs";
+
+const DEMOS = [
+  {
+    title: "What is",
+    question: "Next.js",
+  },
+  {
+    title: "List the benefits",
+    question: "of micro frontends",
+  },
+  {
+    title: "How does",
+    question: "the React component lifecycle work",
+  },
+  {
+    title: "What are the best practices",
+    question: "for building accessible React components",
+  },
+];
 
 const LoadingDots = () => {
   return (
     <Slide>
-      <div className="flex h-full w-full items-center justify-center">
+      <div className="flex h-full w-full flex-col items-center justify-center gap-2">
+        <div className="text-[12px] text-gray-500">Generating Presenation</div>
         <div className="flex items-center justify-center gap-1">
           <div
             className="h-2 w-2 animate-pulse rounded-full bg-gray-300"
@@ -169,7 +190,7 @@ const Presentation = ({
 
 const Slide = ({ children }: React.PropsWithChildren) => {
   return (
-    <div className="border-1 flex h-[300px] w-full flex-col items-start gap-5 rounded-md border border-none bg-white px-5 py-3 text-left shadow-md lg:px-10 lg:py-8">
+    <div className="border-1 flex h-[300px] w-full flex-col items-start gap-5 rounded-md border border-gray-200 bg-white px-5 py-3 text-left shadow-md lg:px-10 lg:py-8">
       {children}
     </div>
   );
@@ -236,7 +257,7 @@ const SideBySideImagesSlide = ({
     <Slide>
       <div className="flex h-full w-full justify-between">
         <div
-          className={`flex-1 ${
+          className={`w-1/2 ${
             audioNumber + 1 >= slide.firstImageDescription.mp3
               ? "flex"
               : "hidden"
@@ -251,7 +272,7 @@ const SideBySideImagesSlide = ({
           />
         </div>
         <div
-          className={`flex-1 ${
+          className={`w-1/2 ${
             audioNumber + 1 >= slide.secondImageDescription.mp3
               ? "flex"
               : "hidden"
@@ -290,6 +311,8 @@ const MiddleImageSlide = ({
           height="200"
           className="h-full w-full object-contain"
           src={slide.imageUrl ?? ""}
+          quality={100}
+          loading="eager"
         />
       </div>
     </Slide>
@@ -300,8 +323,9 @@ export const Chat = ({
   id,
   initialMessages,
   suggestions,
+  session,
 }: {
-  id: number;
+  id: number | null;
   initialMessages: Message[];
   session: Session | null;
   suggestions: {
@@ -315,6 +339,7 @@ export const Chat = ({
     useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isGuest, setIsGuest] = useState(!session?.user);
 
   const formRef = useRef<HTMLFormElement>(null);
   const { pending } = useFormStatus();
@@ -324,6 +349,7 @@ export const Chat = ({
     return messages.length === 0;
   }, [messages]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [collapseDemos, setCollapseDemos] = useState(false);
 
   const router = useRouter();
 
@@ -366,7 +392,7 @@ export const Chat = ({
   }, [scrollTopValue]);
 
   return (
-    <div className="flex h-full w-full flex-1 flex-col overflow-hidden">
+    <div className="flex h-full w-full flex-1 flex-col overflow-hidden lg:pr-[150px]">
       <div
         ref={scrollRef}
         className="flex flex-1 flex-col items-center overflow-y-auto overflow-x-hidden"
@@ -377,8 +403,9 @@ export const Chat = ({
       >
         <div className="mx-auto flex w-full flex-col gap-8 px-4 pb-20 pt-10 md:max-w-3xl lg:mx-0 lg:max-w-[40rem]">
           {messages.map((message, index) => {
+            console.log(messages, message);
             return (
-              <div className="flex flex-col gap-1 text-[15px]" key={index}>
+              <div className="flex flex-col gap-3 text-[15px]" key={index}>
                 <div className="flex items-center gap-2">
                   {message.role === "user" ? (
                     <div className="flex size-4 rounded-full bg-[#DAD0EE]"></div>
@@ -408,13 +435,23 @@ export const Chat = ({
             );
           })}
           {isLoading && (
-            <div className="flex w-full flex-col gap-6 self-start pl-[1.5rem]">
-              <div>
-                <div className="flex self-start">
-                  <LoadingDots />
+            <>
+              <div className="flex flex-col gap-3 text-[15px]">
+                <div className="gap flex items-center gap-2">
+                  <IconLogoIcon />
+                  <div className="font-semibold">Video Learner</div>
+                </div>
+                <div className="pl-[1.5rem] leading-relaxed">
+                  <div className="flex w-full flex-col self-start">
+                    <div>
+                      <div className="flex self-start">
+                        <LoadingDots />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>
@@ -423,6 +460,9 @@ export const Chat = ({
           ref={formRef}
           onSubmit={async (e) => {
             e.preventDefault();
+            if (isGuest) {
+              setCollapseDemos(true);
+            }
             const form = e.currentTarget;
             const formData = new FormData(form);
             const prompt = formData.get("text");
@@ -433,15 +473,22 @@ export const Chat = ({
             setText("");
             setMessages((prev) => [...prev, { role: "user", text: prompt }]);
             setIsLoading(true);
-            const data = await getSlides(prompt, id);
+            if (isGuest) {
+              textareaRef.current!.disabled = true;
+            }
+            if (isGuest) {
+              await sleep(3000);
+            }
+            const data = await getSlides(prompt, id, isGuest);
+            if (isGuest) {
+              setMessages((prev) => [
+                ...prev,
+                { role: "assistant", text: JSON.stringify(data) },
+              ]);
+            }
             setIsLoading(false);
-            setMessages((prev) => [
-              ...prev,
-              { role: "assistant", text: JSON.stringify(data) },
-            ]);
-            router.refresh();
           }}
-          className="relative flex flex-1 cursor-text items-center self-center rounded-[12px] border border-[#D6D6D6]  bg-white px-4 py-4 shadow-sm"
+          className={`relative flex flex-1 cursor-text items-center self-center rounded-[12px] border border-[#D6D6D6]  bg-gray-50 px-4 py-4 shadow-sm`}
         >
           <button
             type="button"
@@ -453,14 +500,17 @@ export const Chat = ({
             <IconArrowDown />
           </button>
           <Textarea
+            disabled={isGuest}
             onChange={onChangeTextarea}
             name="text"
             placeholder={
-              messages.length === 0
-                ? "What do you want to learn about? Or try the suggestions..."
-                : "Message Video Learner..."
+              isGuest
+                ? "Sign up to ask your own questions, or try out the demos!"
+                : messages.length === 0
+                  ? `What do you want to learn about? Or try the suggestions...`
+                  : "Message Video Learner..."
             }
-            className="h-[1lh] max-h-60 min-h-0 resize-none rounded-none border-none p-0 shadow-none placeholder:text-[#BBBBBB] focus-visible:ring-0"
+            className={`h-[1lh] max-h-60 min-h-0 resize-none rounded-none border-none p-0 shadow-none placeholder:text-[#BBBBBB] focus-visible:ring-0 ${isGuest && `placeholder:text-gray-700`}`}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey && "form" in e.target) {
                 e.preventDefault();
@@ -477,9 +527,67 @@ export const Chat = ({
           >
             <IconSend className="size-6" inverted={!!text} />
           </button>
-          {showPrompts && (
+          {isGuest &&
+            (collapseDemos ? (
+              <div className="absolute left-0 top-0 flex w-full -translate-y-[calc(100%+1rem)] flex-col">
+                <Button
+                  variant={"secondary"}
+                  onClick={() => {
+                    setCollapseDemos(false);
+                  }}
+                  type="button"
+                >
+                  Show Demos
+                </Button>
+              </div>
+            ) : (
+              <div className="absolute left-0 top-0 flex w-full -translate-y-[calc(100%+2rem)] flex-col bg-white">
+                <div className="flex w-full items-end justify-between pb-2">
+                  <div className="pb-1 pl-4 text-[10px]">
+                    {isGuest ? "Demos" : "Suggestions"}
+                  </div>
+                  <Button
+                    variant={"ghost"}
+                    className="text-[10px]"
+                    type="button"
+                    onClick={() => {
+                      setCollapseDemos(true);
+                    }}
+                  >
+                    <IconArrowDown className="size-4 text-black" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {DEMOS.map((demo, index) => {
+                    return (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => {
+                          textareaRef.current!.disabled = false;
+                          textareaRef.current!.value = `${demo.title} ${demo.question}`;
+                          console.log(textareaRef.current?.value);
+                          formRef.current?.requestSubmit();
+                        }}
+                        className="border-1 flex flex-1 cursor-pointer flex-col overflow-hidden rounded-xl border border-[#d9d9d9] p-4 hover:bg-white"
+                      >
+                        <div className="text-[14px] font-semibold">
+                          {demo.title}
+                        </div>
+                        <div className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-left text-[12px]">
+                          {demo.question}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          {!isGuest && showPrompts && (
             <div className="absolute left-0 top-0 flex w-full -translate-y-[calc(100%+2rem)] flex-col">
-              <div className="pb-1 pl-4 text-[10px]">Suggestions</div>
+              <div className="pb-1 pl-4 text-[10px]">
+                {isGuest ? "Demos" : "Suggestions"}
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 {suggestions.map((suggestion, index) => {
                   return (

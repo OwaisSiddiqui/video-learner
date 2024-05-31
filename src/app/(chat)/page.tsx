@@ -1,16 +1,34 @@
-import { auth } from "@/auth";
-import { redirect } from "next/navigation";
-import { createChat } from "./actions";
+"use server";
 
-export const maxDuration = 60;
+import { Chat } from "@/components/chat";
+import { getSuggestions } from "@/app/(chat)/actions";
+import { cookies } from "next/headers";
+import { auth, signIn as signInAuth } from "@/auth";
+import GuestModal from "@/components/guest-modal";
 
 export default async function HomePage() {
   const session = await auth();
+  const suggestions = await getSuggestions();
+  const cookieStore = cookies();
+  const isGuest = cookieStore.get("isGuest");
 
-  if (!session?.user) {
-    redirect("/login");
+  async function signIn(formData: FormData) {
+    "use server";
+    await signInAuth("resend", formData);
   }
 
-  const chatId = await createChat();
-  redirect(`/chat/${chatId}`);
+  return (
+    <>
+      <Chat
+        initialMessages={[]}
+        session={session}
+        id={null}
+        suggestions={suggestions}
+      />
+      <GuestModal
+        isGuest={session?.user ? "true" : isGuest?.value ?? ""}
+        signIn={signIn}
+      />
+    </>
+  );
 }

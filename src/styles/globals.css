@@ -121,3 +121,9 @@ code {
 ol {
   list-style: decimal;
 }
+
+.dropdown-menu-content {
+  width: var(--radix-dropdown-menu-trigger-width);
+  max-height: var(--radix-dropdown-menu-content-available-height);
+  /* You can add additional styles here if needed */
+}

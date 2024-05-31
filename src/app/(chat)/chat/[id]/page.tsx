@@ -1,4 +1,4 @@
-import { getMessages } from "@/app/actions";
+import { getMessages } from "@/app/(chat)/actions";
 import { auth } from "@/auth";
 import { Chat } from "@/components/chat";
 import { getSuggestions } from "../../actions";
@@ -15,6 +15,8 @@ export default async function HomePage({
   const session = await auth();
   const initialMessages = await getMessages({ chatId: parseInt(params.id) });
   const suggestions = await getSuggestions();
+
+  console.log("** INTIIAL", JSON.stringify(initialMessages));
 
   return (
     <Chat
