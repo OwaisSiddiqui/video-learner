@@ -599,7 +599,7 @@ export const Chat = ({
                         console.log(textareaRef.current?.value);
                         formRef.current?.requestSubmit();
                       }}
-                      className="border-1 flex flex-1 cursor-pointer flex-col overflow-hidden rounded-xl border border-[#d9d9d9] p-4 hover:bg-white"
+                      className="border-1 flex flex-1 cursor-pointer flex-col overflow-hidden rounded-xl border border-[#d9d9d9] p-4 hover:bg-gray-100 hover:bg-white"
                     >
                       <div className="text-[14px] font-semibold">
                         {suggestion.title}

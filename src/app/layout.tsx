@@ -1,5 +1,5 @@
 import "@/styles/globals.css";
-
+import PlausibleProvider from "next-plausible";
 import { Inter } from "next/font/google";
 
 const inter = Inter({
@@ -20,6 +20,9 @@ export default function RootLayout({
 }) {
   return (
     <html className="h-full" lang="en">
+      <head>
+        <PlausibleProvider domain="videolearner.app" />
+      </head>
       <body
         className={`flex h-full min-h-full w-screen flex-1 overflow-hidden ${inter.className} bg-white`}
       >

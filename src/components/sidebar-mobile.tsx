@@ -77,10 +77,10 @@ export function SidebarMobile({
             className="border-1 flex gap-2 border border-[#E7E0F5] bg-transparent px-4 font-normal text-black shadow-none hover:bg-[#E7E0F5]"
             asChild
           >
-            <a href="/">
+            <Link href="/">
               <IconEdit className="size-3.5 stroke-2" />
               New Chat
-            </a>
+            </Link>
           </Button>
           <div
             className="flex h-full flex-1 flex-col gap-1 overflow-y-auto"
