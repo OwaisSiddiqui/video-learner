@@ -263,7 +263,7 @@ const SideBySideImagesSlide = ({
               : "hidden"
           }`}
         >
-          <Image
+          <img
             alt=""
             width="200"
             height="200"
@@ -278,7 +278,7 @@ const SideBySideImagesSlide = ({
               : "hidden"
           }`}
         >
-          <Image
+          <img
             alt=""
             width="200"
             height="200"
@@ -305,7 +305,7 @@ const MiddleImageSlide = ({
           audioNumber + 1 >= slide.mp3 ? "flex" : "hidden"
         } h-full w-full items-center justify-center`}
       >
-        <Image
+        <img
           alt=""
           width="200"
           height="200"
