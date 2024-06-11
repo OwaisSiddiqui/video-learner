@@ -10,7 +10,8 @@
     "db:prod:init": "set NODE_ENV=production&& drizzle-kit push:pg",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "prettier": "npx prettier --write ."
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.0.0",
