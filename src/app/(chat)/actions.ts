@@ -15,19 +15,18 @@ import { messages as messagesSchema } from "@/server/db/schema";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-export interface SerperImageResponse {
+interface SerperImageResponse {
   searchParameters: SearchParameters
   images: Image[]
 }
 
-export interface SearchParameters {
+interface SearchParameters {
   q: string
   type: string
   engine: string
   num: number
 }
-
-export interface Image {
+interface Image {
   title: string
   imageUrl: string
   imageWidth: number
@@ -257,14 +256,14 @@ export async function generateVoiceData(id: string, narrationArray: string[]) {
   return audioS3Files;
 }
 
-export const searchParametersSchema = z.object({
+const searchParametersSchema = z.object({
   q: z.string(),
   type: z.string(),
   engine: z.string(),
   num: z.number()
 })
 
-export const imageSchema = z.object({
+const imageSchema = z.object({
   title: z.string(),
   imageUrl: z.string(),
   imageWidth: z.number(),
@@ -281,7 +280,7 @@ export const imageSchema = z.object({
   creator: z.string().optional()
 })
 
-export const serperImageResponseSchema = z.object({
+const serperImageResponseSchema = z.object({
   searchParameters: searchParametersSchema,
   images: z.array(imageSchema)
 })
