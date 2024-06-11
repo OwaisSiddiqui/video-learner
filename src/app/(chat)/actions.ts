@@ -7,7 +7,6 @@ import { InferSelectModel, and, eq, or } from "drizzle-orm";
 import OpenAI from "openai";
 import { ElevenLabsClient } from "elevenlabs";
 import pLimit from "p-limit";
-import { getJson } from "serpapi";
 import { z } from "zod";
 import { S3Client } from "@aws-sdk/client-s3";
 import { env } from "@/env";
@@ -15,6 +14,36 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { messages as messagesSchema } from "@/server/db/schema";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+
+export interface SerperImageResponse {
+  searchParameters: SearchParameters
+  images: Image[]
+}
+
+export interface SearchParameters {
+  q: string
+  type: string
+  engine: string
+  num: number
+}
+
+export interface Image {
+  title: string
+  imageUrl: string
+  imageWidth: number
+  imageHeight: number
+  thumbnailUrl: string
+  thumbnailWidth: number
+  thumbnailHeight: number
+  source: string
+  domain: string
+  link: string
+  googleUrl: string
+  position: number
+  copyright?: string
+  creator?: string
+}
+
 
 interface StatementTemplate {
   type: "statement";
@@ -228,9 +257,35 @@ export async function generateVoiceData(id: string, narrationArray: string[]) {
   return audioS3Files;
 }
 
-const resultSchema = z.object({
-  images_results: z.array(z.object({ original: z.string().optional() })),
-});
+export const searchParametersSchema = z.object({
+  q: z.string(),
+  type: z.string(),
+  engine: z.string(),
+  num: z.number()
+})
+
+export const imageSchema = z.object({
+  title: z.string(),
+  imageUrl: z.string(),
+  imageWidth: z.number(),
+  imageHeight: z.number(),
+  thumbnailUrl: z.string(),
+  thumbnailWidth: z.number(),
+  thumbnailHeight: z.number(),
+  source: z.string(),
+  domain: z.string(),
+  link: z.string(),
+  googleUrl: z.string(),
+  position: z.number(),
+  copyright: z.string().optional(),
+  creator: z.string().optional()
+})
+
+export const serperImageResponseSchema = z.object({
+  searchParameters: searchParametersSchema,
+  images: z.array(imageSchema)
+})
+
 
 export async function getImageUrls(data: Slide[]) {
   const limit = pLimit(5);
@@ -245,20 +300,27 @@ export async function getImageUrls(data: Slide[]) {
         : index === 0
           ? slide.firstImageDescription.value
           : slide.secondImageDescription.value;
-    const result = await getJson({
-      engine: "google_images",
-      api_key: env.SERP_API_KEY,
-      q: description,
-      location: "Canada",
-    }).catch((error) => console.log(error));
+    const data = JSON.stringify({
+      "q": description
+    });
+
+    const result: SerperImageResponse | void = await fetch('https://google.serper.dev/images', {
+      method: 'post',
+      headers: {
+        'X-API-KEY': env.SERPER_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: data
+    }).then(response => response.json() as unknown as SerperImageResponse).catch(error => console.log(error))
+
     if (!result) {
       throw new Error("");
     }
     console.log("Result", result);
     let imageUrl: null | string = null;
-    const resultValidated = resultSchema.parse(result);
+    const resultValidated = serperImageResponseSchema.parse(result);
     const imageUrlResult: string | undefined =
-      resultValidated.images_results[0]?.original;
+      resultValidated.images[0]?.link;
     if (!(typeof imageUrlResult === "string")) {
       throw new Error("");
     }
@@ -1052,7 +1114,7 @@ export async function getSlides(
       })
       .catch((error) => console.log(error)),
   );
-  // promises.push(getImageUrls(data).catch(error => console.log(error)));
+  promises.push(getImageUrls(data).catch(error => console.log(error))); // Get Images for Slides
   await Promise.all(promises).catch((error) => console.log(error));
   // TODO: Save data
   const result = { id: newUUID, slides: data, audioS3Files: audioS3Files } as {
