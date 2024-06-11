@@ -319,7 +319,7 @@ export async function getImageUrls(data: Slide[]) {
     let imageUrl: null | string = null;
     const resultValidated = serperImageResponseSchema.parse(result);
     const imageUrlResult: string | undefined =
-      resultValidated.images[0]?.link;
+      resultValidated.images[0]?.imageUrl;
     if (!(typeof imageUrlResult === "string")) {
       throw new Error("");
     }
