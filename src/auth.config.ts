@@ -5,5 +5,5 @@ export const authConfig = {
     signIn: "/login",
   },
   trustHost: true,
-  providers: [],
+  providers: []
 } satisfies NextAuthConfig;

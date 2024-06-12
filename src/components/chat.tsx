@@ -477,7 +477,7 @@ export const Chat = ({
               textareaRef.current!.disabled = true;
             }
             if (isGuest) {
-              await sleep(3000);
+              await sleep(1000);
             }
             const data = await getSlides(prompt, id, isGuest);
             if (isGuest) {

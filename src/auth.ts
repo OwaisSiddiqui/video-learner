@@ -8,10 +8,11 @@ import { db } from "./server/db";
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: DrizzleAdapter(db),
+  session: { strategy: "database" },
   providers: [
     Resend({
       apiKey: env.AUTH_RESEND_KEY,
       from: env.FROM_EMAIL,
     }),
-  ],
+  ]
 });

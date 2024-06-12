@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { chats, messages } from "@/server/db/schema";
-import { InferSelectModel, and, eq, or } from "drizzle-orm";
+import { type InferSelectModel, and, eq } from "drizzle-orm";
 import OpenAI from "openai";
 import { ElevenLabsClient } from "elevenlabs";
 import pLimit from "p-limit";
@@ -12,7 +12,6 @@ import { S3Client } from "@aws-sdk/client-s3";
 import { env } from "@/env";
 import { Upload } from "@aws-sdk/lib-storage";
 import { messages as messagesSchema } from "@/server/db/schema";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { DEMOS } from "@/lib/constants";
 
