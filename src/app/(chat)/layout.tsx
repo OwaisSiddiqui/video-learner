@@ -6,7 +6,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { UserMenu } from "@/components/user-menu";
 import { getChats } from "./actions";
 
-// export const maxDuration = 60;
+export const maxDuration = 60;
 // export const runtime = "edge";
 
 export default async function ChatLayout({
@@ -18,7 +18,7 @@ export default async function ChatLayout({
   };
 }) {
   const session = await auth();
-  console.log("LAYOUT", session?.user?.email)
+  console.log("LAYOUT", session?.user?.email);
   const chats = await getChats();
 
   return (
