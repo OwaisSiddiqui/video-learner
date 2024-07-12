@@ -231,7 +231,7 @@ export async function generateData(id: string, question: string) {
 
 export async function generateVoiceData(id: string, narrationArray: string[]) {
   console.log("Voice data");
-  const limit = pLimit(5);
+  const limit = pLimit(2);
   const audioS3Files: { index: number; path: string }[] = [];
 
   const generateAndSaveVoice = async (narration: string, index: number) => {
