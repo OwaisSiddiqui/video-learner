@@ -1,6 +1,6 @@
 # VideoLearner.app
 
-Video Learner is an AI chatbot that helps learn concepts by replying with a presentation-style response with AI voice narration over text-based explanations
+Video Learner is an AI chatbot that helps teach educational content through AI-narrated presentations generated using OpenAI's GPT-4 API and ElevenLabs' TTS API.
 
 ## Features
 
